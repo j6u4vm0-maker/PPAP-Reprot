@@ -106,6 +106,7 @@ export interface UseWorkspaceActionsReturn {
   patchRecordMeta: (id: string, payload: PatchDrawingMetaPayload) => Promise<DrawingRecord>;
   deleteRecord: (record: DrawingRecord) => Promise<void>;
   exportTransferJson: () => void;
+  exportWordDocx: () => Promise<boolean>;
   importTransferJson: (file: File) => Promise<void>;
   downloadCompositePng: () => void;
   backupDatabase: () => Promise<void>;

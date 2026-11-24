@@ -159,6 +159,7 @@ export function PpapWorkspace(): React.ReactElement {
         onImportJsonFile={(f) => void actions.importTransferJson(f)}
         onSaveAsNew={() => void handleSaveAndSyncParts(true)}
         onSaveDb={() => void handleSaveAndSyncParts(false)}
+        onExportWord={() => void actions.exportWordDocx().then((ok) => { if (!ok) setActiveTab("editor"); })}
         onExportJson={actions.exportTransferJson}
       />
 
@@ -205,6 +206,7 @@ export function PpapWorkspace(): React.ReactElement {
           onOpenPasteModal={() => setActiveModal("paste")}
           onOpenSymbolManager={() => setActiveModal("symbol")}
           onOpenToleranceModal={() => setActiveModal("tolerance")}
+          onExportWord={() => void actions.exportWordDocx().then((ok) => { if (!ok) setActiveTab("editor"); })}
           onDownloadJson={actions.exportTransferJson}
           onNotify={showToast}
         />

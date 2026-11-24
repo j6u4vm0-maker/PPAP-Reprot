@@ -1,25 +1,14 @@
 "use client";
 
 import { useCallback, useState } from "react";
-import type {
-  UsePdfCanvasReturn,
-  UseSpecEditorReturn,
-  UseWorkspaceActionsReturn,
-} from "@/types/editor";
-import type {
-  DatabaseBackupPayload,
-  DrawingRecord,
-  PatchDrawingMetaPayload,
-  ToastKind,
-} from "@/types/ppap";
+import type { UsePdfCanvasReturn, UseSpecEditorReturn, UseWorkspaceActionsReturn } from "@/types/editor";
+import type { DatabaseBackupPayload, DrawingRecord, PatchDrawingMetaPayload, ToastKind } from "@/types/ppap";
 import type { UseDrawingDatabaseReturn } from "./useDrawingDatabase";
-import { downloadBlob, renderCompositeDrawingDataUrl } from "@/utils/compositeRenderer";
-import {
-  type DrawingValidationResult,
-  validateDrawingForSave,
-} from "@/utils/drawingValidator";
+import { renderCompositeDrawingDataUrl } from "@/utils/compositeRenderer";
+import { type DrawingValidationResult, validateDrawingForSave } from "@/utils/drawingValidator";
 import { blobToDataUrl } from "@/utils/pdfLoader";
 import { buildTransferJson, parseTransferJsonText } from "@/utils/transferJson";
+import { buildExportFilename, downloadDataUrlFile, downloadJsonPayload, requestWordExport } from "@/utils/wordExportClient";
 
 interface UseWorkspaceActionsParams {
   canvas: UsePdfCanvasReturn;
@@ -65,6 +54,22 @@ export function useWorkspaceActions({
     [canvas, editor, showToast]
   );
 
+  const buildCurrentTransfer = useCallback(
+    (overridePartNo?: string) =>
+      buildTransferJson({
+        page3: overridePartNo ? { ...editor.page3, itemNo: overridePartNo } : editor.page3,
+        page4: overridePartNo ? { ...editor.page4, partNumber: overridePartNo } : editor.page4,
+        balloonStyle: editor.balloonStyle,
+        generalTolerance: editor.generalTolerance,
+        cropRect: editor.cropRect,
+        sourceFileName: canvas.sourceFileName,
+        rotation: canvas.rotation,
+        notes: editor.notes,
+        compositeImageBase64: getCompositeImage(),
+      }),
+    [canvas.rotation, canvas.sourceFileName, editor, getCompositeImage]
+  );
+
   const saveToDb = useCallback(
     async (asNew: boolean): Promise<boolean> => {
       const check = validateDrawingForSave(editor.page3, editor.page4, editor.balloonStyle.padZero);
@@ -91,17 +96,7 @@ export function useWorkspaceActions({
           if (resp.ok) sourceBase64 = await blobToDataUrl(await resp.blob());
         }
 
-        const fullTransfer = buildTransferJson({
-          page3: { ...editor.page3, itemNo: targetPartNo },
-          page4: { ...editor.page4, partNumber: targetPartNo },
-          balloonStyle: editor.balloonStyle,
-          generalTolerance: editor.generalTolerance,
-          cropRect: editor.cropRect,
-          sourceFileName: canvas.sourceFileName,
-          rotation: canvas.rotation,
-          notes: editor.notes,
-          compositeImageBase64: getCompositeImage(),
-        });
+        const fullTransfer = buildCurrentTransfer(targetPartNo);
         const { balloonedDrawingImageBase64, ...page3WithoutImage } = fullTransfer.page3;
 
         const saved = await db.saveDrawing({
@@ -136,7 +131,7 @@ export function useWorkspaceActions({
         return false;
       }
     },
-    [canvas, db, editor, getCompositeImage, showToast]
+    [buildCurrentTransfer, canvas, db, editor, showToast]
   );
 
   const patchRecordMeta = useCallback(
@@ -166,79 +161,76 @@ export function useWorkspaceActions({
   const exportTransferJson = useCallback((): void => {
     const partNo = editor.page3.itemNo.trim();
     if (!partNo) { showToast("請先填寫料號再匯出移轉 JSON", "warn"); return; }
-    const payload = buildTransferJson({
-      page3: editor.page3, page4: editor.page4, balloonStyle: editor.balloonStyle,
-      generalTolerance: editor.generalTolerance, cropRect: editor.cropRect,
-      sourceFileName: canvas.sourceFileName, rotation: canvas.rotation,
-      notes: editor.notes, compositeImageBase64: getCompositeImage(),
-    });
-    const dateTag = new Date().toISOString().slice(0, 10).replace(/-/g, "");
-    const safePart = partNo.replace(/[^a-zA-Z0-9._-]/g, "_");
-    downloadBlob(new Blob([JSON.stringify(payload, null, 2)], { type: "application/json;charset=utf-8" }), `PPAP_${safePart}_${dateTag}.json`);
-    showToast(`已匯出移轉 JSON：PPAP_${safePart}_${dateTag}.json`, "success");
-  }, [canvas.rotation, canvas.sourceFileName, editor, getCompositeImage, showToast]);
+    const filename = buildExportFilename("PPAP", partNo, "json");
+    downloadJsonPayload(buildCurrentTransfer(), filename, true);
+    showToast(`已匯出移轉 JSON：${filename}`, "success");
+  }, [buildCurrentTransfer, editor.page3.itemNo, showToast]);
 
-  const importTransferJson = useCallback(
-    async (file: File): Promise<void> => {
-      try {
-        const parsed = parseTransferJsonText(await file.text());
-        editor.hydrateFromImported(parsed);
-        if (parsed.imageBase64) {
-          await canvas.loadFromDataUrl(parsed.imageBase64, `${parsed.page3.itemNo || "imported"}_drawing.png`, "image");
-        } else {
-          canvas.removeSourceMedia();
-        }
-        showToast(`已成功匯入 JSON：${parsed.page3.itemNo}`, "success");
-      } catch (err) {
-        showToast(err instanceof Error ? err.message : "匯入 JSON 失敗", "error");
+  const exportWordDocx = useCallback(async (): Promise<boolean> => {
+    const check = validateDrawingForSave(editor.page3, editor.page4, editor.balloonStyle.padZero);
+    if (!check.valid) {
+      setValidationResult(check);
+      showToast(`無法匯出 Word，尚未填寫：${check.missingMessages.join("、")}`, "error");
+      return false;
+    }
+    setValidationResult(null);
+    try {
+      const filename = await requestWordExport(buildCurrentTransfer());
+      showToast(`已匯出 Word 報告：${filename}`, "success");
+      return true;
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "匯出 Word 失敗";
+      showToast(/failed to fetch/i.test(msg) ? "無法連線到本地伺服器，請確認伺服器執行中" : msg, "error");
+      return false;
+    }
+  }, [buildCurrentTransfer, editor.balloonStyle.padZero, editor.page3, editor.page4, showToast]);
+
+  const importTransferJson = useCallback(async (file: File): Promise<void> => {
+    try {
+      const parsed = parseTransferJsonText(await file.text());
+      editor.hydrateFromImported(parsed);
+      if (parsed.imageBase64) {
+        await canvas.loadFromDataUrl(parsed.imageBase64, `${parsed.page3.itemNo || "imported"}_drawing.png`, "image");
+      } else {
+        canvas.removeSourceMedia();
       }
-    },
-    [canvas, editor, showToast]
-  );
+      showToast(`已成功匯入 JSON：${parsed.page3.itemNo}`, "success");
+    } catch (err) {
+      showToast(err instanceof Error ? err.message : "匯入 JSON 失敗", "error");
+    }
+  }, [canvas, editor, showToast]);
 
   const downloadCompositePng = useCallback((): void => {
     const dataUrl = getCompositeImage();
-    if (!dataUrl) {
-      showToast("尚未載入工程圖，無法下載球標圖", "warn");
-      return;
-    }
-    const a = document.createElement("a");
-    a.href = dataUrl;
-    a.download = `${(editor.page3.itemNo || "drawing").replace(/[^a-zA-Z0-9._-]/g, "_")}_ballooned.png`;
-    a.click();
+    if (!dataUrl) { showToast("尚未載入工程圖，無法下載球標圖", "warn"); return; }
+    const safePart = (editor.page3.itemNo || "drawing").replace(/[^a-zA-Z0-9._-]/g, "_");
+    downloadDataUrlFile(dataUrl, `${safePart}_ballooned.png`);
     showToast("已下載合成球標圖 PNG", "success");
   }, [editor.page3.itemNo, getCompositeImage, showToast]);
 
   const backupDatabase = useCallback(async (): Promise<void> => {
     try {
       const backup = await db.exportBackup();
-      const dateTag = new Date().toISOString().slice(0, 10).replace(/-/g, "");
-      downloadBlob(
-        new Blob([JSON.stringify(backup)], { type: "application/json;charset=utf-8" }),
-        `PPAP_DrawingDB_Backup_${dateTag}.json`
-      );
+      downloadJsonPayload(backup, buildExportFilename("PPAP_DrawingDB", "Backup", "json"));
       showToast("已匯出完整圖紙資料庫備份", "success");
     } catch (err) {
       showToast(err instanceof Error ? err.message : "匯出備份失敗", "error");
     }
   }, [db, showToast]);
 
-  const restoreDatabaseFile = useCallback(
-    async (file: File): Promise<void> => {
-      try {
-        const parsed = JSON.parse(await file.text()) as DatabaseBackupPayload;
-        const count = await db.restoreBackup(parsed, "merge");
-        showToast(`已成功匯入 ${count} 筆圖紙至資料庫`, "success");
-      } catch (err) {
-        showToast(err instanceof Error ? err.message : "還原失敗", "error");
-      }
-    },
-    [db, showToast]
-  );
+  const restoreDatabaseFile = useCallback(async (file: File): Promise<void> => {
+    try {
+      const parsed = JSON.parse(await file.text()) as DatabaseBackupPayload;
+      const count = await db.restoreBackup(parsed, "merge");
+      showToast(`已成功匯入 ${count} 筆圖紙至資料庫`, "success");
+    } catch (err) {
+      showToast(err instanceof Error ? err.message : "還原失敗", "error");
+    }
+  }, [db, showToast]);
 
   return {
     validationResult, clearValidation, getCompositeImage, loadRecord, saveToDb,
-    patchRecordMeta, deleteRecord, exportTransferJson, importTransferJson,
+    patchRecordMeta, deleteRecord, exportTransferJson, exportWordDocx, importTransferJson,
     downloadCompositePng, backupDatabase, restoreDatabaseFile,
   };
 }

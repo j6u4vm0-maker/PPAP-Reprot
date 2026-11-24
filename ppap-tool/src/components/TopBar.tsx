@@ -12,6 +12,7 @@ interface TopBarProps {
   onImportJsonFile: (file: File) => void;
   onSaveAsNew: () => void;
   onSaveDb: () => void;
+  onExportWord: () => void;
   onExportJson: () => void;
 }
 
@@ -25,6 +26,7 @@ export function TopBar({
   onImportJsonFile,
   onSaveAsNew,
   onSaveDb,
+  onExportWord,
   onExportJson,
 }: TopBarProps): React.ReactElement {
   const jsonInputRef = useRef<HTMLInputElement>(null);
@@ -110,6 +112,15 @@ export function TopBar({
           className="inline-flex items-center gap-1 rounded-md bg-blue-600 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-blue-700"
         >
           💾 儲存至資料庫
+        </button>
+
+        <button
+          type="button"
+          onClick={onExportWord}
+          className="inline-flex items-center gap-1 rounded-md bg-indigo-600 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-indigo-700"
+          title="匯出與範例報告版面一致的 A4 直式 Word (.docx)"
+        >
+          📄 匯出 Word
         </button>
 
         <button

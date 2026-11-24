@@ -10,6 +10,7 @@ import type {
   TransferJsonPayload,
 } from "@/types/ppap";
 import type { UseSpecEditorReturn } from "@/types/editor";
+import { copyTextWithFallback } from "@/utils/clipboard";
 import type { DrawingValidationResult } from "@/utils/drawingValidator";
 import { PartMasterPickerBar } from "./PartMasterPickerBar";
 import { ValidationErrorBanner } from "./ValidationErrorBanner";
@@ -42,6 +43,7 @@ interface RightEditorPanelProps {
   onOpenPasteModal: () => void;
   onOpenSymbolManager: () => void;
   onOpenToleranceModal: () => void;
+  onExportWord: () => void;
   onDownloadJson: () => void;
   onNotify: (msg: string, kind?: ToastKind) => void;
 }
@@ -74,6 +76,7 @@ export function RightEditorPanel({
   onOpenPasteModal,
   onOpenSymbolManager,
   onOpenToleranceModal,
+  onExportWord,
   onDownloadJson,
   onNotify,
 }: RightEditorPanelProps): React.ReactElement {
@@ -88,21 +91,13 @@ export function RightEditorPanel({
           `${s.item}\t${s.dimension}\t${s.tolerancePlus}\t${s.toleranceMinus}\t${s.cavity}\t${s.testQuantity}`
       )
       .join("\n");
-    try {
-      await navigator.clipboard.writeText(tsv);
-      onNotify("已複製 6 欄規格表到剪貼簿", "success");
-    } catch {
-      onNotify("無法存取剪貼簿", "error");
-    }
+    const ok = await copyTextWithFallback(tsv);
+    onNotify(ok ? "已複製 6 欄規格表到剪貼簿" : "無法存取剪貼簿", ok ? "success" : "error");
   };
 
   const handleCopyJson = async (): Promise<void> => {
-    try {
-      await navigator.clipboard.writeText(JSON.stringify(transferPayload, null, 2));
-      onNotify("已複製完整移轉 JSON 至剪貼簿", "success");
-    } catch {
-      onNotify("複製失敗，請改用下載按鈕", "error");
-    }
+    const ok = await copyTextWithFallback(JSON.stringify(transferPayload, null, 2));
+    onNotify(ok ? "已複製完整移轉 JSON 至剪貼簿" : "複製失敗，請改用下載按鈕", ok ? "success" : "error");
   };
 
   return (
@@ -198,7 +193,11 @@ export function RightEditorPanel({
         )}
 
         {activeTab === "preview" && (
-          <ReportPreviewTab transferData={transferPayload} onRefresh={onRefreshPreview} />
+          <ReportPreviewTab
+            transferData={transferPayload}
+            onRefresh={onRefreshPreview}
+            onExportWord={onExportWord}
+          />
         )}
 
         {activeTab === "json" && (

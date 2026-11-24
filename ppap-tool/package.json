@@ -4,12 +4,13 @@
   "private": true,
   "description": "PPAP 尺寸移轉工具 — Next.js 14 (App Router) + TypeScript + Tailwind CSS",
   "scripts": {
-    "dev": "next dev -p 3880",
+    "dev": "next dev -H 0.0.0.0 -p 3880",
     "build": "next build",
-    "start": "next start -p 3880",
+    "start": "next start -H 0.0.0.0 -p 3880",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "docx": "^9.16.0",
     "next": "14.2.18",
     "pdfjs-dist": "^4.10.38",
     "react": "^18.3.1",
