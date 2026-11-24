@@ -5,6 +5,7 @@ import type { PartMasterInput, PartMasterItem } from "@/types/ppap";
 
 interface PartMasterRowProps {
   item: PartMasterItem;
+  hasLinkedDrawing: boolean;
   onApply: (item: PartMasterItem) => void;
   onUpdate: (id: string, payload: PartMasterInput) => Promise<void>;
   onDelete: (id: string) => Promise<void>;
@@ -12,6 +13,7 @@ interface PartMasterRowProps {
 
 export function PartMasterRow({
   item,
+  hasLinkedDrawing,
   onApply,
   onUpdate,
   onDelete,
@@ -118,7 +120,18 @@ export function PartMasterRow({
 
   return (
     <tr className="border-b border-slate-100 text-xs hover:bg-slate-50">
-      <td className="p-2 font-mono font-bold text-slate-900">{item.partNo || "—"}</td>
+      <td className="p-2 font-mono font-bold text-slate-900">
+        <div>{item.partNo || "—"}</div>
+        <span
+          className={`mt-0.5 inline-block rounded px-1.5 py-0.5 font-sans text-[10px] font-semibold ${
+            hasLinkedDrawing
+              ? "bg-emerald-50 text-emerald-700"
+              : "bg-slate-100 text-slate-500"
+          }`}
+        >
+          {hasLinkedDrawing ? "📎 已有圖紙" : "尚無圖紙"}
+        </span>
+      </td>
       <td className="max-w-[220px] truncate p-2 text-slate-700" title={item.partName}>
         {item.partName || "—"}
       </td>
@@ -129,9 +142,13 @@ export function PartMasterRow({
         <button
           type="button"
           onClick={() => onApply(item)}
-          className="mr-1 rounded bg-emerald-600 px-2 py-1 text-[11px] font-semibold text-white hover:bg-emerald-700"
+          className={`mr-1 rounded px-2 py-1 text-[11px] font-semibold text-white ${
+            hasLinkedDrawing
+              ? "bg-emerald-600 hover:bg-emerald-700"
+              : "bg-indigo-600 hover:bg-indigo-700"
+          }`}
         >
-          帶入
+          {hasLinkedDrawing ? "載入圖紙" : "帶入表頭"}
         </button>
         <button
           type="button"

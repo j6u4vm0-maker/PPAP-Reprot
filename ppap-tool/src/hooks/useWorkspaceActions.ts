@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback } from "react";
+import { useCallback, useState } from "react";
 import type {
   UsePdfCanvasReturn,
   UseSpecEditorReturn,
@@ -14,6 +14,10 @@ import type {
 } from "@/types/ppap";
 import type { UseDrawingDatabaseReturn } from "./useDrawingDatabase";
 import { downloadBlob, renderCompositeDrawingDataUrl } from "@/utils/compositeRenderer";
+import {
+  type DrawingValidationResult,
+  validateDrawingForSave,
+} from "@/utils/drawingValidator";
 import { blobToDataUrl } from "@/utils/pdfLoader";
 import { buildTransferJson, parseTransferJsonText } from "@/utils/transferJson";
 
@@ -33,6 +37,9 @@ export function useWorkspaceActions({
   editor,
   showToast,
 }: UseWorkspaceActionsParams): UseWorkspaceActionsReturn {
+  const [validationResult, setValidationResult] = useState<DrawingValidationResult | null>(null);
+  const clearValidation = useCallback((): void => setValidationResult(null), []);
+
   const getCompositeImage = useCallback((): string | null => {
     if (!canvas.hasMedia || !canvas.baseCanvasRef.current) return null;
     return renderCompositeDrawingDataUrl({
@@ -59,17 +66,19 @@ export function useWorkspaceActions({
   );
 
   const saveToDb = useCallback(
-    async (asNew: boolean): Promise<void> => {
-      const currentPart = editor.page3.itemNo.trim();
-      if (!currentPart) {
-        showToast("請先填寫料號 (Item No / Part No.) 再儲存", "error");
-        return;
+    async (asNew: boolean): Promise<boolean> => {
+      const check = validateDrawingForSave(editor.page3, editor.page4, editor.balloonStyle.padZero);
+      if (!check.valid) {
+        setValidationResult(check);
+        showToast(`無法存檔，尚未填寫：${check.missingMessages.join("、")}`, "error");
+        return false;
       }
+      setValidationResult(null);
 
-      let targetPartNo = currentPart;
+      let targetPartNo = editor.page3.itemNo.trim();
       if (asNew) {
-        const prompted = prompt("請輸入「另存新料號」的料號名稱：", `${currentPart}-NEW`);
-        if (!prompted || !prompted.trim()) return;
+        const prompted = prompt("請輸入「另存新料號」的料號名稱：", `${targetPartNo}-NEW`);
+        if (!prompted || !prompted.trim()) return false;
         targetPartNo = prompted.trim();
         editor.updatePage3({ itemNo: targetPartNo });
         editor.updatePage4({ partNumber: targetPartNo });
@@ -93,6 +102,7 @@ export function useWorkspaceActions({
           notes: editor.notes,
           compositeImageBase64: getCompositeImage(),
         });
+        const { balloonedDrawingImageBase64, ...page3WithoutImage } = fullTransfer.page3;
 
         const saved = await db.saveDrawing({
           id: asNew ? null : editor.drawingId,
@@ -103,12 +113,12 @@ export function useWorkspaceActions({
           clearSourceFile: canvas.clearSourceFlag,
           pdfPage: canvas.pdfPage,
           rotation: canvas.rotation,
-          compositeImageBase64: fullTransfer.page3.balloonedDrawingImageBase64,
+          compositeImageBase64: balloonedDrawingImageBase64,
           cropRect: editor.cropRect,
           balloonStyle: editor.balloonStyle,
           generalTolerance: editor.generalTolerance,
           page3: {
-            ...fullTransfer.page3,
+            ...page3WithoutImage,
             judgementSyncWithTestStandard: editor.page3.judgementSyncWithTestStandard,
           },
           page4: { ...editor.page4, partNumber: targetPartNo },
@@ -120,8 +130,10 @@ export function useWorkspaceActions({
         editor.setIsDirty(false);
         canvas.resetPendingFlags();
         showToast(`已成功儲存「${targetPartNo}」至本地圖紙資料庫`, "success");
+        return true;
       } catch (err) {
         showToast(err instanceof Error ? err.message : "儲存失敗", "error");
+        return false;
       }
     },
     [canvas, db, editor, getCompositeImage, showToast]
@@ -132,10 +144,7 @@ export function useWorkspaceActions({
       const updated = await db.patchDrawingMeta(id, payload);
       if (editor.drawingId === id) {
         editor.updatePage3(updated.page3);
-        editor.updatePage4({
-          partNumber: updated.page4.partNumber,
-          partName: updated.page4.partName,
-        });
+        editor.updatePage4({ partNumber: updated.page4.partNumber, partName: updated.page4.partName });
         editor.updateNotes(updated.notes);
         editor.setIsDirty(false);
       }
@@ -156,29 +165,18 @@ export function useWorkspaceActions({
 
   const exportTransferJson = useCallback((): void => {
     const partNo = editor.page3.itemNo.trim();
-    if (!partNo) {
-      showToast("請先填寫料號再匯出移轉 JSON", "warn");
-      return;
-    }
+    if (!partNo) { showToast("請先填寫料號再匯出移轉 JSON", "warn"); return; }
     const payload = buildTransferJson({
-      page3: editor.page3,
-      page4: editor.page4,
-      balloonStyle: editor.balloonStyle,
-      generalTolerance: editor.generalTolerance,
-      cropRect: editor.cropRect,
-      sourceFileName: canvas.sourceFileName,
-      rotation: canvas.rotation,
-      notes: editor.notes,
-      compositeImageBase64: getCompositeImage(),
+      page3: editor.page3, page4: editor.page4, balloonStyle: editor.balloonStyle,
+      generalTolerance: editor.generalTolerance, cropRect: editor.cropRect,
+      sourceFileName: canvas.sourceFileName, rotation: canvas.rotation,
+      notes: editor.notes, compositeImageBase64: getCompositeImage(),
     });
     const dateTag = new Date().toISOString().slice(0, 10).replace(/-/g, "");
     const safePart = partNo.replace(/[^a-zA-Z0-9._-]/g, "_");
-    downloadBlob(
-      new Blob([JSON.stringify(payload, null, 2)], { type: "application/json;charset=utf-8" }),
-      `PPAP_${safePart}_${dateTag}.json`
-    );
+    downloadBlob(new Blob([JSON.stringify(payload, null, 2)], { type: "application/json;charset=utf-8" }), `PPAP_${safePart}_${dateTag}.json`);
     showToast(`已匯出移轉 JSON：PPAP_${safePart}_${dateTag}.json`, "success");
-  }, [canvas.sourceFileName, editor, getCompositeImage, showToast]);
+  }, [canvas.rotation, canvas.sourceFileName, editor, getCompositeImage, showToast]);
 
   const importTransferJson = useCallback(
     async (file: File): Promise<void> => {
@@ -239,8 +237,8 @@ export function useWorkspaceActions({
   );
 
   return {
-    getCompositeImage, loadRecord, saveToDb, patchRecordMeta, deleteRecord,
-    exportTransferJson, importTransferJson, downloadCompositePng,
-    backupDatabase, restoreDatabaseFile,
+    validationResult, clearValidation, getCompositeImage, loadRecord, saveToDb,
+    patchRecordMeta, deleteRecord, exportTransferJson, importTransferJson,
+    downloadCompositePng, backupDatabase, restoreDatabaseFile,
   };
 }

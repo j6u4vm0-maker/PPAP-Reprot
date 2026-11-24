@@ -26,6 +26,7 @@ interface WorkspaceModalsProps {
   symbolLib: UseSymbolLibraryReturn;
   toleranceLib: UseToleranceLibraryReturn;
   partMasterLib: UsePartMasterLibraryReturn;
+  linkedPartIds: Set<string>;
   onApplyPartMaster: (item: PartMasterItem) => void;
   editor: UseSpecEditorReturn;
   actions: UseWorkspaceActionsReturn;
@@ -40,6 +41,7 @@ export function WorkspaceModals({
   symbolLib,
   toleranceLib,
   partMasterLib,
+  linkedPartIds,
   onApplyPartMaster,
   editor,
   actions,
@@ -142,6 +144,7 @@ export function WorkspaceModals({
       <PartMasterModal
         isOpen={activeModal === "parts"}
         parts={partMasterLib.parts}
+        linkedPartIds={linkedPartIds}
         onClose={onCloseModal}
         onApplyPart={onApplyPartMaster}
         onAdd={async (payload) => {

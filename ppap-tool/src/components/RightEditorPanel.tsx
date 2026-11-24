@@ -10,7 +10,9 @@ import type {
   TransferJsonPayload,
 } from "@/types/ppap";
 import type { UseSpecEditorReturn } from "@/types/editor";
+import type { DrawingValidationResult } from "@/utils/drawingValidator";
 import { PartMasterPickerBar } from "./PartMasterPickerBar";
+import { ValidationErrorBanner } from "./ValidationErrorBanner";
 import { HeaderFormCard } from "./HeaderFormCard";
 import { SpecTableCard } from "./SpecTableCard";
 import { ReportPreviewTab } from "./ReportPreviewTab";
@@ -25,6 +27,9 @@ interface RightEditorPanelProps {
   symbols: SymbolItem[];
   toleranceProfiles: GeneralToleranceProfile[];
   partMasters: PartMasterItem[];
+  linkedPartIds: Set<string>;
+  validationResult: DrawingValidationResult | null;
+  onDismissValidation: () => void;
   transferPayload: TransferJsonPayload;
   hasMedia: boolean;
   onTabChange: (tab: RightTabKey) => void;
@@ -54,6 +59,9 @@ export function RightEditorPanel({
   symbols,
   toleranceProfiles,
   partMasters,
+  linkedPartIds,
+  validationResult,
+  onDismissValidation,
   transferPayload,
   hasMedia,
   onTabChange,
@@ -119,8 +127,14 @@ export function RightEditorPanel({
       <div className="flex flex-1 flex-col gap-3 overflow-y-auto p-3">
         {activeTab === "editor" && (
           <>
+            <ValidationErrorBanner
+              validation={validationResult}
+              onDismiss={onDismissValidation}
+            />
+
             <PartMasterPickerBar
               parts={partMasters}
+              linkedPartIds={linkedPartIds}
               canSaveCurrent={Boolean(editor.page3.itemNo.trim() || editor.page3.testStandard.trim())}
               onSelectPart={onApplyPartMaster}
               onSaveCurrentToMaster={onSaveCurrentToPartMaster}
@@ -132,6 +146,7 @@ export function RightEditorPanel({
               page4={editor.page4}
               notes={editor.notes}
               equipmentLibrary={equipmentList}
+              invalidFields={validationResult?.invalidFields}
               onChangePage3={editor.updatePage3}
               onChangePage4={editor.updatePage4}
               onChangeNotes={editor.updateNotes}
@@ -148,6 +163,7 @@ export function RightEditorPanel({
               generalTolerance={editor.generalTolerance}
               toleranceProfiles={toleranceProfiles}
               symbols={symbols}
+              invalidSpecIndices={validationResult?.invalidSpecIndices}
               selectedRowIndex={editor.selectedRowIndex}
               targetItemIndex={editor.targetItemIndex}
               onSelectRow={editor.setSelectedRowIndex}

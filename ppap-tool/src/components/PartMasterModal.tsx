@@ -9,6 +9,7 @@ import { PartMasterRow } from "./PartMasterRow";
 interface PartMasterModalProps {
   isOpen: boolean;
   parts: PartMasterItem[];
+  linkedPartIds: Set<string>;
   onClose: () => void;
   onApplyPart: (item: PartMasterItem) => void;
   onAdd: (payload: PartMasterInput) => Promise<void>;
@@ -28,6 +29,7 @@ const EMPTY_FORM: PartMasterInput = {
 export function PartMasterModal({
   isOpen,
   parts,
+  linkedPartIds,
   onClose,
   onApplyPart,
   onAdd,
@@ -97,9 +99,7 @@ export function PartMasterModal({
               支援單筆新增／編輯／刪除與 Excel 批次貼上，點選「帶入」即可自動填入表單
             </p>
           </div>
-          <button type="button" onClick={onClose} className="rounded p-1 text-slate-500 hover:bg-slate-100">
-            ✕
-          </button>
+          <button type="button" onClick={onClose} className="rounded p-1 text-slate-500 hover:bg-slate-100">✕</button>
         </div>
 
         <div className="border-b border-slate-200 bg-slate-50 px-5 py-2.5">
@@ -225,16 +225,13 @@ export function PartMasterModal({
             </thead>
             <tbody>
               {filteredParts.length === 0 ? (
-                <tr>
-                  <td colSpan={6} className="py-8 text-center text-slate-400">
-                    尚無符合條件的料號主檔資料
-                  </td>
-                </tr>
+                <tr><td colSpan={6} className="py-8 text-center text-slate-400">尚無符合條件的料號主檔資料</td></tr>
               ) : (
                 filteredParts.map((item) => (
                   <PartMasterRow
                     key={item.id}
                     item={item}
+                    hasLinkedDrawing={linkedPartIds.has(item.id)}
                     onApply={(selected) => {
                       onApplyPart(selected);
                       onClose();

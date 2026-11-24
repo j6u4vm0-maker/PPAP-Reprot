@@ -20,6 +20,7 @@ interface SpecTableCardProps {
   generalTolerance: GeneralToleranceConfig;
   toleranceProfiles: GeneralToleranceProfile[];
   symbols: SymbolItem[];
+  invalidSpecIndices?: number[];
   selectedRowIndex: number | null;
   targetItemIndex: number | null;
   onSelectRow: (index: number) => void;
@@ -47,6 +48,7 @@ export function SpecTableCard({
   generalTolerance,
   toleranceProfiles,
   symbols,
+  invalidSpecIndices = [],
   selectedRowIndex,
   targetItemIndex,
   onSelectRow,
@@ -192,6 +194,7 @@ export function SpecTableCard({
                   generalTolerance={generalTolerance}
                   isSelected={selectedRowIndex === idx}
                   isTargeting={targetItemIndex === idx}
+                  isDimensionInvalid={invalidSpecIndices.includes(idx)}
                   symTolerance={symTolerance}
                   onSelect={() => onSelectRow(idx)}
                   onLocateBalloon={() => onLocateBalloon(idx)}

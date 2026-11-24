@@ -95,10 +95,14 @@ export interface UseSpecEditorReturn {
   resetBlank: () => void;
 }
 
+import type { DrawingValidationResult } from "@/utils/drawingValidator";
+
 export interface UseWorkspaceActionsReturn {
+  validationResult: DrawingValidationResult | null;
+  clearValidation: () => void;
   getCompositeImage: () => string | null;
   loadRecord: (record: DrawingRecord) => Promise<void>;
-  saveToDb: (asNew: boolean) => Promise<void>;
+  saveToDb: (asNew: boolean) => Promise<boolean>;
   patchRecordMeta: (id: string, payload: PatchDrawingMetaPayload) => Promise<DrawingRecord>;
   deleteRecord: (record: DrawingRecord) => Promise<void>;
   exportTransferJson: () => void;

@@ -56,16 +56,28 @@ export function useDrawingDatabase(): UseDrawingDatabaseReturn {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
-      const data = (await res.json()) as { drawing?: DrawingRecord; error?: string };
+      let data: { drawing?: DrawingRecord; error?: string } = {};
+      try {
+        data = (await res.json()) as { drawing?: DrawingRecord; error?: string };
+      } catch {
+        throw new Error(
+          res.status === 413
+            ? "圖檔容量過大導致無法上傳，請裁切或壓縮圖檔後重試"
+            : `伺服器回應異常 (HTTP ${res.status})`
+        );
+      }
       if (!res.ok || !data.drawing) {
-        throw new Error(data.error || "儲存圖紙失敗");
+        throw new Error(data.error || `儲存圖紙失敗 (HTTP ${res.status})`);
       }
       await fetchDrawings();
       return data.drawing;
     } catch (err) {
-      const msg = err instanceof Error ? err.message : "儲存圖紙發生錯誤";
-      setError(msg);
-      throw err;
+      const rawMsg = err instanceof Error ? err.message : "儲存圖紙發生錯誤";
+      const friendlyMsg = /failed to fetch|networkerror|load failed/i.test(rawMsg)
+        ? "無法連線到本地伺服器 (localhost:3880)，請確認「啟動PPAP尺寸工具.bat」視窗仍在執行中！"
+        : rawMsg;
+      setError(friendlyMsg);
+      throw new Error(friendlyMsg);
     }
   }, [fetchDrawings]);
 

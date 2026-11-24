@@ -1,7 +1,8 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import type { EquipmentItem, Page3Data, Page4Data } from "@/types/ppap";
+import type { RequiredFieldKey } from "@/utils/drawingValidator";
 import { getCombinedStandardRevDate } from "@/utils/specFormatter";
 import { HeaderAdvancedFields } from "./HeaderAdvancedFields";
 
@@ -10,6 +11,7 @@ interface HeaderFormCardProps {
   page4: Page4Data;
   notes: string;
   equipmentLibrary: EquipmentItem[];
+  invalidFields?: RequiredFieldKey[];
   onChangePage3: (patch: Partial<Page3Data>) => void;
   onChangePage4: (patch: Partial<Page4Data>) => void;
   onChangeNotes: (notes: string) => void;
@@ -22,6 +24,7 @@ export function HeaderFormCard({
   page4,
   notes,
   equipmentLibrary,
+  invalidFields = [],
   onChangePage3,
   onChangePage4,
   onChangeNotes,
@@ -29,6 +32,17 @@ export function HeaderFormCard({
   onOpenEquipmentManager,
 }: HeaderFormCardProps): React.ReactElement {
   const [isCollapsed, setIsCollapsed] = useState<boolean>(false);
+
+  useEffect(() => {
+    if (invalidFields.length > 0) setIsCollapsed(false);
+  }, [invalidFields]);
+
+  const isInvalid = (key: RequiredFieldKey): boolean => invalidFields.includes(key);
+  const inputErrCls = (key: RequiredFieldKey): string =>
+    isInvalid(key)
+      ? "border-red-500 bg-red-50/40 ring-2 ring-red-500/20"
+      : "border-slate-300 focus:border-blue-600 focus:ring-2 focus:ring-blue-600/15";
+
   const combinedStd = getCombinedStandardRevDate(
     page3.testStandard,
     page3.revision,
@@ -83,7 +97,7 @@ export function HeaderFormCard({
               onChangePage4({ partNumber: e.target.value });
             }}
             placeholder="例如：E4010-BLUE"
-            className="w-full rounded-md border border-slate-300 px-2.5 py-1.5 text-xs focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-600/15"
+            className={`w-full rounded-md border px-2.5 py-1.5 text-xs focus:outline-none ${inputErrCls("itemNo")}`}
           />
         </div>
 
@@ -142,7 +156,7 @@ export function HeaderFormCard({
               });
             }}
             placeholder="例如：KA-95436-C"
-            className="w-full rounded-md border border-slate-300 px-2.5 py-1.5 text-xs focus:border-blue-600 focus:outline-none"
+            className={`w-full rounded-md border px-2.5 py-1.5 text-xs focus:outline-none ${inputErrCls("testStandard")}`}
           />
         </div>
 

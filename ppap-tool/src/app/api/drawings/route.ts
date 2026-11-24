@@ -3,9 +3,55 @@ import { NextRequest, NextResponse } from "next/server";
 import { isFileReferencedByOthers, loadDatabase, saveDatabase } from "@/lib/dbStore";
 import { safeDeleteFile, saveBase64File } from "@/lib/fileStore";
 import { normalizeRotation } from "@/utils/geometry";
-import type { BalloonStyle, DrawingRecord, SaveDrawingPayload } from "@/types/ppap";
+import type {
+  BalloonStyle,
+  DatabaseSchema,
+  DrawingRecord,
+  SaveDrawingPayload,
+} from "@/types/ppap";
 
 export const dynamic = "force-dynamic";
+
+function syncPartMasterFromDrawing(db: DatabaseSchema, record: DrawingRecord): void {
+  const partNo = record.partNo.trim();
+  const testStandard = (record.page3?.testStandard || "").trim();
+  const revision = (record.page3?.revision || "").trim();
+  const issueDate = (record.page3?.issueDate || "").trim();
+  const partName = (record.page4?.partName || "").trim();
+  if (!partNo && !testStandard) return;
+
+  const norm = (s: string): string => s.trim().toLowerCase();
+  const idx = db.partMasterLibrary.findIndex(
+    (p) =>
+      norm(p.partNo) === norm(partNo) &&
+      norm(p.testStandard) === norm(testStandard) &&
+      norm(p.revision) === norm(revision)
+  );
+  const now = record.updatedAt;
+  if (idx >= 0) {
+    db.partMasterLibrary[idx] = {
+      ...db.partMasterLibrary[idx],
+      partNo,
+      partName: partName || db.partMasterLibrary[idx].partName,
+      testStandard,
+      revision,
+      issueDate: issueDate || db.partMasterLibrary[idx].issueDate,
+      updatedAt: now,
+    };
+    return;
+  }
+
+  db.partMasterLibrary.unshift({
+    id: `pm_${Date.now()}_${crypto.randomBytes(3).toString("hex")}`,
+    partNo,
+    partName,
+    testStandard,
+    revision,
+    issueDate,
+    createdAt: now,
+    updatedAt: now,
+  });
+}
 
 const DEFAULT_BALLOON_STYLE: BalloonStyle = {
   preset: "classic",
@@ -103,6 +149,9 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       compositeImageFile = savedComp;
     }
 
+    const cleanPage3 = { ...body.page3 } as Record<string, unknown>;
+    delete cleanPage3.balloonedDrawingImageBase64;
+
     const record: DrawingRecord = {
       id,
       partNo,
@@ -117,7 +166,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       cropRect: body.cropRect ?? null,
       balloonStyle: body.balloonStyle || DEFAULT_BALLOON_STYLE,
       generalTolerance: body.generalTolerance,
-      page3: body.page3,
+      page3: cleanPage3 as unknown as DrawingRecord["page3"],
       page4: body.page4,
       notes: body.notes ?? "",
     };
@@ -128,6 +177,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       db.drawings.unshift(record);
     }
 
+    syncPartMasterFromDrawing(db, record);
     saveDatabase(db);
     return NextResponse.json({ ok: true, drawing: record });
   } catch (err) {

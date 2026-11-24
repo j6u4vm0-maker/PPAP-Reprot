@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useMemo, useState } from "react";
-import type { CanvasMode, HealthResponse, PartMasterItem } from "@/types/ppap";
+import type { CanvasMode, HealthResponse } from "@/types/ppap";
 import { useToast } from "@/hooks/useToast";
 import { usePdfCanvas } from "@/hooks/usePdfCanvas";
 import { useDrawingDatabase } from "@/hooks/useDrawingDatabase";
@@ -9,6 +9,7 @@ import { useEquipmentLibrary } from "@/hooks/useEquipmentLibrary";
 import { useSymbolLibrary } from "@/hooks/useSymbolLibrary";
 import { useToleranceLibrary } from "@/hooks/useToleranceLibrary";
 import { usePartMasterLibrary } from "@/hooks/usePartMasterLibrary";
+import { usePartMasterSync } from "@/hooks/usePartMasterSync";
 import { useSpecEditor } from "@/hooks/useSpecEditor";
 import { useWorkspaceActions } from "@/hooks/useWorkspaceActions";
 import { useWorkspaceShortcuts } from "@/hooks/useWorkspaceShortcuts";
@@ -36,6 +37,14 @@ export function PpapWorkspace(): React.ReactElement {
   const partMasterLib = usePartMasterLibrary();
   const editor = useSpecEditor();
   const actions = useWorkspaceActions({ canvas, db, editor, showToast });
+  const partSync = usePartMasterSync({
+    canvas,
+    db,
+    partMasterLib,
+    editor,
+    actions,
+    showToast,
+  });
 
   useEffect(() => {
     let mounted = true;
@@ -73,38 +82,13 @@ export function PpapWorkspace(): React.ReactElement {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const handleApplyPartMaster = (item: PartMasterItem): void => {
-    editor.updatePage3({
-      itemNo: item.partNo,
-      testStandard: item.testStandard,
-      revision: item.revision,
-      issueDate: item.issueDate,
-      ...(editor.page3.judgementSyncWithTestStandard
-        ? { judgementStandard: item.testStandard }
-        : {}),
-    });
-    editor.updatePage4({ partNumber: item.partNo, partName: item.partName });
-    showToast(`已帶入主檔：${item.partNo || item.testStandard}`, "success");
-  };
-
-  const handleSaveCurrentToPartMaster = async (): Promise<void> => {
-    try {
-      const res = await partMasterLib.addPart({
-        partNo: editor.page3.itemNo,
-        partName: editor.page4.partName,
-        testStandard: editor.page3.testStandard,
-        revision: editor.page3.revision,
-        issueDate: editor.page3.issueDate,
-      });
-      showToast(
-        res.replacedExisting
-          ? `已更新料號主檔「${res.item.partNo || res.item.testStandard}」`
-          : `已將「${res.item.partNo || res.item.testStandard}」存進主檔`,
-        "success"
-      );
-    } catch (err) {
-      showToast(err instanceof Error ? err.message : "儲存主檔失敗", "error");
+  const handleSaveAndSyncParts = async (asNew: boolean): Promise<void> => {
+    const ok = await actions.saveToDb(asNew);
+    if (!ok) {
+      setActiveTab("editor");
+      return;
     }
+    await partMasterLib.fetchParts().catch(() => {});
   };
 
   const handleDeleteBalloonAndSpec = (idx: number): void => {
@@ -121,7 +105,7 @@ export function PpapWorkspace(): React.ReactElement {
       editor.setTargetItemIndex(null);
       setActiveModal(null);
     },
-    onSave: () => void actions.saveToDb(false),
+    onSave: () => void handleSaveAndSyncParts(false),
     onDeleteSelected: handleDeleteBalloonAndSpec,
   });
 
@@ -173,8 +157,8 @@ export function PpapWorkspace(): React.ReactElement {
           canvas.removeSourceMedia();
         }}
         onImportJsonFile={(f) => void actions.importTransferJson(f)}
-        onSaveAsNew={() => void actions.saveToDb(true)}
-        onSaveDb={() => void actions.saveToDb(false)}
+        onSaveAsNew={() => void handleSaveAndSyncParts(true)}
+        onSaveDb={() => void handleSaveAndSyncParts(false)}
         onExportJson={actions.exportTransferJson}
       />
 
@@ -199,6 +183,9 @@ export function PpapWorkspace(): React.ReactElement {
           symbols={symbolLib.symbols}
           toleranceProfiles={toleranceLib.profiles}
           partMasters={partMasterLib.parts}
+          linkedPartIds={partSync.linkedPartIds}
+          validationResult={actions.validationResult}
+          onDismissValidation={actions.clearValidation}
           transferPayload={transferPayload}
           hasMedia={canvas.hasMedia}
           onTabChange={(tab) => {
@@ -211,8 +198,8 @@ export function PpapWorkspace(): React.ReactElement {
             editor.setTargetItemIndex(editor.targetItemIndex === idx ? null : idx);
             editor.setSelectedRowIndex(idx);
           }}
-          onApplyPartMaster={handleApplyPartMaster}
-          onSaveCurrentToPartMaster={() => void handleSaveCurrentToPartMaster()}
+          onApplyPartMaster={(item) => void partSync.applyPartMaster(item)}
+          onSaveCurrentToPartMaster={() => void partSync.saveCurrentToPartMaster()}
           onOpenPartMasterManager={() => setActiveModal("parts")}
           onOpenEquipmentManager={() => setActiveModal("equip")}
           onOpenPasteModal={() => setActiveModal("paste")}
@@ -231,7 +218,8 @@ export function PpapWorkspace(): React.ReactElement {
         symbolLib={symbolLib}
         toleranceLib={toleranceLib}
         partMasterLib={partMasterLib}
-        onApplyPartMaster={handleApplyPartMaster}
+        linkedPartIds={partSync.linkedPartIds}
+        onApplyPartMaster={(item) => void partSync.applyPartMaster(item)}
         editor={editor}
         actions={actions}
         showToast={showToast}

@@ -19,6 +19,7 @@ interface SpecTableRowProps {
   generalTolerance: GeneralToleranceConfig;
   isSelected: boolean;
   isTargeting: boolean;
+  isDimensionInvalid?: boolean;
   symTolerance: boolean;
   onSelect: () => void;
   onLocateBalloon: () => void;
@@ -38,6 +39,7 @@ export function SpecTableRow({
   generalTolerance,
   isSelected,
   isTargeting,
+  isDimensionInvalid = false,
   symTolerance,
   onSelect,
   onLocateBalloon,
@@ -97,8 +99,12 @@ export function SpecTableRow({
             }
             onDimensionBlur();
           }}
-          placeholder="3.20"
-          className="w-full rounded border border-slate-300 px-1 py-1 text-center font-mono text-xs focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+          placeholder={isDimensionInvalid ? "必填!" : "3.20"}
+          className={`w-full rounded border px-1 py-1 text-center font-mono text-xs focus:outline-none ${
+            isDimensionInvalid
+              ? "border-red-500 bg-red-50/50 ring-2 ring-red-500/25 placeholder:text-red-500"
+              : "border-slate-300 focus:border-blue-600 focus:ring-2 focus:ring-blue-500/20"
+          }`}
         />
       </td>
 
@@ -112,15 +118,10 @@ export function SpecTableRow({
           onChange={(e) => onUpdate({ tolerancePlus: e.target.value }, symTolerance)}
           onBlur={() => {
             if (spec.tolerancePlus.trim()) {
-              onUpdate(
-                { tolerancePlus: formatToleranceString(spec.tolerancePlus, "+") },
-                symTolerance
-              );
+              onUpdate({ tolerancePlus: formatToleranceString(spec.tolerancePlus, "+") }, symTolerance);
             }
           }}
-          placeholder={
-            isNoToleranceSpec ? "—" : resolved.isGeneralTolerance ? resolved.tolerancePlus : "+0.10"
-          }
+          placeholder={isNoToleranceSpec ? "—" : resolved.isGeneralTolerance ? resolved.tolerancePlus : "+0.10"}
           className="w-full rounded border border-slate-300 px-1 py-1 text-center font-mono text-xs font-semibold text-teal-700 placeholder:font-normal placeholder:text-slate-400"
         />
       </td>
@@ -138,9 +139,7 @@ export function SpecTableRow({
               onUpdate({ toleranceMinus: formatToleranceString(spec.toleranceMinus, "-") });
             }
           }}
-          placeholder={
-            isNoToleranceSpec ? "—" : resolved.isGeneralTolerance ? resolved.toleranceMinus : "-0.10"
-          }
+          placeholder={isNoToleranceSpec ? "—" : resolved.isGeneralTolerance ? resolved.toleranceMinus : "-0.10"}
           className="w-full rounded border border-slate-300 px-1 py-1 text-center font-mono text-xs font-semibold text-red-700 placeholder:font-normal placeholder:text-slate-400"
         />
       </td>

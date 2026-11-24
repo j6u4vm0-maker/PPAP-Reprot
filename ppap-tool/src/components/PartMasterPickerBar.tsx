@@ -5,6 +5,7 @@ import type { PartMasterItem } from "@/types/ppap";
 
 interface PartMasterPickerBarProps {
   parts: PartMasterItem[];
+  linkedPartIds: Set<string>;
   canSaveCurrent: boolean;
   onSelectPart: (item: PartMasterItem) => void;
   onSaveCurrentToMaster: () => void;
@@ -12,10 +13,11 @@ interface PartMasterPickerBarProps {
 }
 
 /**
- * 置於表頭上方的「料號／品名／圖號／版次」主檔快選與管理條
+ * 置於表頭上方的「料號／品名／圖號／版次」主檔快選與管理條（連動載入對應圖紙）
  */
 export function PartMasterPickerBar({
   parts,
+  linkedPartIds,
   canSaveCurrent,
   onSelectPart,
   onSaveCurrentToMaster,
@@ -37,20 +39,24 @@ export function PartMasterPickerBar({
         >
           <option value="">
             {parts.length > 0
-              ? `快選帶入品名／圖號／版次（共 ${parts.length} 筆）...`
+              ? `快選切換主檔與圖紙（共 ${parts.length} 筆，📎 表示已有圖紙）...`
               : "尚無主檔，請先點擊右側管理建立..."}
           </option>
-          {parts.map((p) => (
-            <option key={p.id} value={p.id}>
-              {[
-                p.partNo || "(無料號)",
-                p.testStandard ? `${p.testStandard}${p.revision ? ` / ${p.revision}` : ""}` : "",
-                p.partName,
-              ]
-                .filter(Boolean)
-                .join(" ｜ ")}
-            </option>
-          ))}
+          {parts.map((p) => {
+            const hasDrawing = linkedPartIds.has(p.id);
+            return (
+              <option key={p.id} value={p.id}>
+                {hasDrawing ? "📎 " : "📄 "}
+                {[
+                  p.partNo || "(無料號)",
+                  p.testStandard ? `${p.testStandard}${p.revision ? ` / ${p.revision}` : ""}` : "",
+                  p.partName,
+                ]
+                  .filter(Boolean)
+                  .join(" ｜ ")}
+              </option>
+            );
+          })}
         </select>
       </div>
 
