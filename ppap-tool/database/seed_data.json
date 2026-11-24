@@ -1,0 +1,329 @@
+{
+  "version": "1.0",
+  "updatedAt": "2026-11-24T21:00:00.000Z",
+  "drawings": [
+    {
+      "id": "seed_e4010_blue",
+      "partNo": "E4010-BLUE",
+      "createdAt": "2026-11-24T20:48:00.000Z",
+      "updatedAt": "2026-11-24T20:48:00.000Z",
+      "sourceFile": null,
+      "sourceFileName": "",
+      "sourceFileType": "",
+      "pdfPage": 1,
+      "compositeImageFile": null,
+      "cropRect": null,
+      "balloonStyle": {
+        "radius": 16,
+        "bgColor": "#111827",
+        "textColor": "#ffffff",
+        "borderColor": "#ffffff",
+        "padZero": true
+      },
+      "page3": {
+        "testItems": "1.尺寸量測 Size Measurement",
+        "itemNo": "E4010-BLUE",
+        "sampleQtyNumber": 5,
+        "sampleQty": "5 PCS",
+        "testStandard": "KA-95436-C",
+        "revision": "1-1",
+        "issueDate": "2023/11/26",
+        "combinedStandardRevDate": "KA-95436-C/1-1/2023/11/26",
+        "testConditions": "無",
+        "judgementStandard": "KA-95436-C",
+        "judgementSyncWithTestStandard": true,
+        "testEquipment": [
+          "游標卡尺 Caliper : S200-01 內-031",
+          "投影機 Projection : S200-05 外-116",
+          "圓棒 Pin Gauge : D210-06 內-002"
+        ]
+      },
+      "page4": {
+        "organization": "KST",
+        "inspectionDivision": "QC",
+        "partNumber": "E4010-BLUE",
+        "partName": "NYLON-INSULATED CORD END TERMINALS(E SERIES)",
+        "levelRecordOfDesignChange": "N/A",
+        "documentOfEngineeringChange": "N/A",
+        "specifications": [
+          {
+            "item": 1,
+            "balloonLabel": "01",
+            "dimension": "3.20",
+            "tolerancePlus": "+0.10",
+            "toleranceMinus": "-0.10",
+            "upperLimit": 3.3,
+            "lowerLimit": 3.1,
+            "cavity": "1",
+            "testQuantity": 5,
+            "balloonPosition": null
+          },
+          {
+            "item": 2,
+            "balloonLabel": "02",
+            "dimension": "2.80",
+            "tolerancePlus": "+0.20",
+            "toleranceMinus": "-0.20",
+            "upperLimit": 3.0,
+            "lowerLimit": 2.6,
+            "cavity": "1",
+            "testQuantity": 5,
+            "balloonPosition": null
+          },
+          {
+            "item": 3,
+            "balloonLabel": "03",
+            "dimension": "17.40",
+            "tolerancePlus": "+1.10",
+            "toleranceMinus": "-1.10",
+            "upperLimit": 18.5,
+            "lowerLimit": 16.3,
+            "cavity": "1",
+            "testQuantity": 5,
+            "balloonPosition": null
+          },
+          {
+            "item": 4,
+            "balloonLabel": "04",
+            "dimension": "10.00",
+            "tolerancePlus": "+0.40",
+            "toleranceMinus": "-0.40",
+            "upperLimit": 10.4,
+            "lowerLimit": 9.6,
+            "cavity": "1",
+            "testQuantity": 5,
+            "balloonPosition": null
+          },
+          {
+            "item": 5,
+            "balloonLabel": "05",
+            "dimension": "7.40",
+            "tolerancePlus": "+0.50",
+            "toleranceMinus": "-0.50",
+            "upperLimit": 7.9,
+            "lowerLimit": 6.9,
+            "cavity": "1",
+            "testQuantity": 5,
+            "balloonPosition": null
+          },
+          {
+            "item": 6,
+            "balloonLabel": "06",
+            "dimension": "4.80",
+            "tolerancePlus": "+0.40",
+            "toleranceMinus": "-0.40",
+            "upperLimit": 5.2,
+            "lowerLimit": 4.4,
+            "cavity": "1",
+            "testQuantity": 5,
+            "balloonPosition": null
+          }
+        ]
+      },
+      "notes": "預載範例：來自 T115111207 -E4010-BLUE.doc（上傳對應 PDF 圖紙即可標記球標並存檔）"
+    },
+    {
+      "id": "seed_e2508_blue",
+      "partNo": "E2508-BLUE",
+      "createdAt": "2026-11-24T20:47:00.000Z",
+      "updatedAt": "2026-11-24T20:47:00.000Z",
+      "sourceFile": null,
+      "sourceFileName": "",
+      "sourceFileType": "",
+      "pdfPage": 1,
+      "compositeImageFile": null,
+      "cropRect": null,
+      "balloonStyle": {
+        "radius": 16,
+        "bgColor": "#111827",
+        "textColor": "#ffffff",
+        "borderColor": "#ffffff",
+        "padZero": true
+      },
+      "page3": {
+        "testItems": "1.尺寸量測 Size Measurement",
+        "itemNo": "E2508-BLUE",
+        "sampleQtyNumber": 5,
+        "sampleQty": "5 PCS",
+        "testStandard": "KA-95430-C",
+        "revision": "1-3",
+        "issueDate": "2016/04/12",
+        "combinedStandardRevDate": "KA-95430-C/1-3/2016/04/12",
+        "testConditions": "無",
+        "judgementStandard": "KA-95430-C",
+        "judgementSyncWithTestStandard": true,
+        "testEquipment": [
+          "游標卡尺 Caliper : S200-01 內-031",
+          "投影機 Projection : S200-05 外-116",
+          "圓棒 Pin Gauge : D210-06 內-001"
+        ]
+      },
+      "page4": {
+        "organization": "KST",
+        "inspectionDivision": "QC",
+        "partNumber": "E2508-BLUE",
+        "partName": "NYLON-INSULATED CORD END TERMINALS(E SERIES)",
+        "levelRecordOfDesignChange": "N/A",
+        "documentOfEngineeringChange": "N/A",
+        "specifications": [
+          {
+            "item": 1,
+            "balloonLabel": "01",
+            "dimension": "2.50",
+            "tolerancePlus": "+0.15",
+            "toleranceMinus": "-0.10",
+            "upperLimit": 2.65,
+            "lowerLimit": 2.4,
+            "cavity": "1",
+            "testQuantity": 5,
+            "balloonPosition": null
+          },
+          {
+            "item": 2,
+            "balloonLabel": "02",
+            "dimension": "2.20",
+            "tolerancePlus": "+0.15",
+            "toleranceMinus": "-0.10",
+            "upperLimit": 2.35,
+            "lowerLimit": 2.1,
+            "cavity": "1",
+            "testQuantity": 5,
+            "balloonPosition": null
+          },
+          {
+            "item": 3,
+            "balloonLabel": "03",
+            "dimension": "15.40",
+            "tolerancePlus": "+1.50",
+            "toleranceMinus": "-1.50",
+            "upperLimit": 16.9,
+            "lowerLimit": 13.9,
+            "cavity": "1",
+            "testQuantity": 5,
+            "balloonPosition": null
+          },
+          {
+            "item": 4,
+            "balloonLabel": "04",
+            "dimension": "8.00",
+            "tolerancePlus": "+0.40",
+            "toleranceMinus": "-0.40",
+            "upperLimit": 8.4,
+            "lowerLimit": 7.6,
+            "cavity": "1",
+            "testQuantity": 5,
+            "balloonPosition": null
+          },
+          {
+            "item": 5,
+            "balloonLabel": "05",
+            "dimension": "7.40",
+            "tolerancePlus": "+0.50",
+            "toleranceMinus": "-0.50",
+            "upperLimit": 7.9,
+            "lowerLimit": 6.9,
+            "cavity": "1",
+            "testQuantity": 5,
+            "balloonPosition": null
+          },
+          {
+            "item": 6,
+            "balloonLabel": "06",
+            "dimension": "4.20",
+            "tolerancePlus": "+0.20",
+            "toleranceMinus": "-0.20",
+            "upperLimit": 4.4,
+            "lowerLimit": 4.0,
+            "cavity": "1",
+            "testQuantity": 5,
+            "balloonPosition": null
+          }
+        ]
+      },
+      "notes": "預載範例：來自 T115111206 -E2508-BLUE.doc（含非對稱公差 +0.15 / -0.10）"
+    },
+    {
+      "id": "seed_pnt14",
+      "partNo": "PNT14",
+      "createdAt": "2026-11-24T20:48:30.000Z",
+      "updatedAt": "2026-11-24T20:48:30.000Z",
+      "sourceFile": null,
+      "sourceFileName": "",
+      "sourceFileType": "",
+      "pdfPage": 1,
+      "compositeImageFile": null,
+      "cropRect": null,
+      "balloonStyle": {
+        "radius": 16,
+        "bgColor": "#111827",
+        "textColor": "#ffffff",
+        "borderColor": "#ffffff",
+        "padZero": true
+      },
+      "page3": {
+        "testItems": "1.尺寸量測 Size Measurement",
+        "itemNo": "PNT14",
+        "sampleQtyNumber": 5,
+        "sampleQty": "5 PCS",
+        "testStandard": "KT-95721-C",
+        "revision": "1-1",
+        "issueDate": "2019/11/08",
+        "combinedStandardRevDate": "KT-95721-C/1-1/2019/11/08",
+        "testConditions": "無",
+        "judgementStandard": "KT-95721-C",
+        "judgementSyncWithTestStandard": true,
+        "testEquipment": [
+          "游標卡尺 Caliper : S200-01 內-031",
+          "圓棒 Pin Gauge : S200-06 內-001"
+        ]
+      },
+      "page4": {
+        "organization": "KST",
+        "inspectionDivision": "QC",
+        "partNumber": "PNT14",
+        "partName": "NON-INSULATED PARALLEL CONNECTORS",
+        "levelRecordOfDesignChange": "N/A",
+        "documentOfEngineeringChange": "N/A",
+        "specifications": [
+          {
+            "item": 1,
+            "balloonLabel": "01",
+            "dimension": "8.90",
+            "tolerancePlus": "+0.30",
+            "toleranceMinus": "-0.20",
+            "upperLimit": 9.2,
+            "lowerLimit": 8.7,
+            "cavity": "1",
+            "testQuantity": 5,
+            "balloonPosition": null
+          },
+          {
+            "item": 2,
+            "balloonLabel": "02",
+            "dimension": "5.90",
+            "tolerancePlus": "+0.10",
+            "toleranceMinus": "-0.30",
+            "upperLimit": 6.0,
+            "lowerLimit": 5.6,
+            "cavity": "1",
+            "testQuantity": 5,
+            "balloonPosition": null
+          },
+          {
+            "item": 3,
+            "balloonLabel": "03",
+            "dimension": "11.00",
+            "tolerancePlus": "+0.50",
+            "toleranceMinus": "-0.50",
+            "upperLimit": 11.5,
+            "lowerLimit": 10.5,
+            "cavity": "1",
+            "testQuantity": 5,
+            "balloonPosition": null
+          }
+        ]
+      },
+      "notes": "預載範例：來自 T115111208 -PNT14.doc"
+    }
+  ]
+}

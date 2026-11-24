@@ -1,0 +1,29 @@
+# Dependencies & Next.js build artifacts
+node_modules/
+.next/
+out/
+build/
+*.tsbuildinfo
+next-env.d.ts
+
+# Local environment files
+.env
+.env.local
+.env.*.local
+
+# Logs & OS files
+*.log
+npm-debug.log*
+.DS_Store
+Thumbs.db
+
+# Office temp files & company/customer reports or drawings
+~$*
+/*.doc
+/*.docx
+/PNT14_ballooned.png
+
+# Local runtime database & uploaded engineering drawings (keep seed_data.json)
+ppap-tool/database/drawings_db.json
+ppap-tool/database/drawings_db.json.tmp
+ppap-tool/database/files/
